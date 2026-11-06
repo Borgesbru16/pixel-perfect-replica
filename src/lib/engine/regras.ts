@@ -49,7 +49,7 @@ export function resolverMargem(
       (m) => m.nivel === nivel && (nivel === "geral" || m.referenciaId === ref) && vigente(m, data),
     );
     if (candidatas.length === 1) {
-      const m = candidatas[0];
+      const m = candidatas[0]!;
       return { status: "ok", percentual: dec(m.percentual), origem: ROTULO_NIVEL[nivel], regraId: m.id };
     }
     if (candidatas.length > 1) {
@@ -131,7 +131,7 @@ export function escolherRegra(candidatos: Candidato[], ordem: Escopo[]): Escolha
       (a.fonte === b.fonte ? 0 : a.fonte === "excecao" ? -1 : 1) ||
       b.prioridade - a.prioridade,
   );
-  const topo = ordenados[0];
+  const topo = ordenados[0]!;
   const empatados = ordenados.filter(
     (c) => rank(c) === rank(topo) && c.fonte === topo.fonte && c.prioridade === topo.prioridade,
   );

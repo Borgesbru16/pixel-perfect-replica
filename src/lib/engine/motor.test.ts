@@ -9,6 +9,7 @@ import { dec } from "./decimal";
 import { simular } from "./motor";
 import type {
   EntradaSimulacao,
+  ItemResultado,
   Excecao,
   MargemRegra,
   ParametrosMotor,
@@ -151,7 +152,7 @@ describe("4-7. Filhos: cor, dimensão e combinação multiplicativa", () => {
   it("pai R$ 10,00, branca −10% e +2 incrementos de 5% resultam em R$ 9,90", () => {
     const filho = produto({ id: "f1", corId: "branca", corNome: "Branca", valorDimensao: "30" });
     const r = simular(entrada({ filhos: [filho] }));
-    const f = r.filhos[0];
+    const f = r.filhos[0]!;
     expect(n(f.ajusteCor!.percentual)).toBe("-0.1000");
     expect(f.ajusteDimensional!.incrementos).toBe(2);
     expect(n(f.ajusteDimensional!.percentual)).toBe("0.1000");
@@ -175,7 +176,7 @@ describe("4-7. Filhos: cor, dimensão e combinação multiplicativa", () => {
   it("modo composto: (1,05)^2 − 1 = 10,25%", () => {
     const filho = produto({ id: "f1", valorDimensao: "30" });
     const r = simular(entrada({ filhos: [filho], parametros: { ...PARAMS, modoDimensional: "composto" } }));
-    expect(n(r.filhos[0].ajusteDimensional!.percentual)).toBe("0.1025");
+    expect(n(r.filhos[0]!.ajusteDimensional!.percentual)).toBe("0.1025");
   });
 
   it("usa a sequência comercial, não a diferença numérica entre medidas", () => {
@@ -184,31 +185,31 @@ describe("4-7. Filhos: cor, dimensão e combinação multiplicativa", () => {
       { grupoDimensionalId: "g1", valorDimensao: "50", ordem: 2, ativo: true },
     ];
     const r = simular(entrada({ sequencias: seq, filhos: [produto({ id: "f", valorDimensao: "50" })] }));
-    expect(r.filhos[0].ajusteDimensional!.incrementos).toBe(1);
+    expect(r.filhos[0]!.ajusteDimensional!.incrementos).toBe(1);
   });
 
   it("dimensão ausente não aplica ajuste dimensional", () => {
     const r = simular(entrada({ filhos: [produto({ id: "f", valorDimensao: null })] }));
-    expect(r.filhos[0].ajusteDimensional).toBeNull();
-    expect(r.filhos[0].alertas.map((a) => a.codigo)).toContain("DIMENSAO_AUSENTE");
-    expect(n(r.filhos[0].precoFinal)).toBe("10.0000");
+    expect(r.filhos[0]!.ajusteDimensional).toBeNull();
+    expect(r.filhos[0]!.alertas.map((a) => a.codigo)).toContain("DIMENSAO_AUSENTE");
+    expect(n(r.filhos[0]!.precoFinal)).toBe("10.0000");
   });
 
   it("régua ausente gera alerta sem inventar percentual", () => {
     const r = simular(entrada({ reguas: [REGUA_DIM], filhos: [produto({ id: "f", corId: "branca" })] }));
-    expect(r.filhos[0].ajusteCor).toBeNull();
-    expect(r.filhos[0].alertas.map((a) => a.codigo)).toContain("REGUA_COR_AUSENTE");
+    expect(r.filhos[0]!.ajusteCor).toBeNull();
+    expect(r.filhos[0]!.alertas.map((a) => a.codigo)).toContain("REGUA_COR_AUSENTE");
   });
 
   it("bloqueia filho em linha diferente do pai", () => {
     const r = simular(entrada({ filhos: [produto({ id: "f", linhaId: "outra" })] }));
-    expect(r.filhos[0].status).toBe("bloqueado");
+    expect(r.filhos[0]!.status).toBe("bloqueado");
   });
 
   it("bloqueia filho sem custo", () => {
     const r = simular(entrada({ filhos: [produto({ id: "f", custo: null })] }));
-    expect(r.filhos[0].status).toBe("bloqueado");
-    expect(r.filhos[0].alertas.map((a) => a.codigo)).toContain("CUSTO_AUSENTE");
+    expect(r.filhos[0]!.status).toBe("bloqueado");
+    expect(r.filhos[0]!.alertas.map((a) => a.codigo)).toContain("CUSTO_AUSENTE");
   });
 });
 
@@ -240,9 +241,9 @@ describe("8. Arredondamento em R$ 0,10", () => {
     // 10,00 × 1,0 × (1 + 0,05 × 1) × (1 − 0,04) = 10,08 → 10,10
     const reguaCor = { ...REGUA_COR, cores: [{ corId: "bege", percentual: "-0.04" }] };
     const r = simular(entrada({ reguas: [reguaCor, REGUA_DIM], filhos: [produto({ id: "f", valorDimensao: "25" })] }));
-    expect(n(r.filhos[0].precoBruto)).toBe("10.0800");
-    expect(n(r.filhos[0].precoFinal)).toBe("10.1000");
-    expect(dec(r.filhos[0].margemAlcancada!).toFixed(6)).toBe(dec("4.1").div("10.1").toFixed(6));
+    expect(n(r.filhos[0]!.precoBruto)).toBe("10.0800");
+    expect(n(r.filhos[0]!.precoFinal)).toBe("10.1000");
+    expect(dec(r.filhos[0]!.margemAlcancada!).toFixed(6)).toBe(dec("4.1").div("10.1").toFixed(6));
   });
 });
 
@@ -250,8 +251,8 @@ describe("9. Margem individual dos filhos", () => {
   it("custo R$ 6,00 e preço R$ 9,90 resultam em 39,39%", () => {
     const filho = produto({ id: "f1", corId: "branca", valorDimensao: "30", custo: "6" });
     const r = simular(entrada({ filhos: [filho] }));
-    expect(dec(r.filhos[0].margemAlcancada!).times(100).toFixed(2)).toBe("39.39");
-    expect(r.filhos[0].status).toBe("abaixo_meta");
+    expect(dec(r.filhos[0]!.margemAlcancada!).times(100).toFixed(2)).toBe("39.39");
+    expect(r.filhos[0]!.status).toBe("abaixo_meta");
   });
 });
 
@@ -270,13 +271,13 @@ describe("10. Hierarquia das margens", () => {
         filhos: [produto({ id: "f" }), produto({ id: "g" })],
       }),
     );
-    expect([r.filhos[0].origemMargem, n(r.filhos[0].margemObjetiva)]).toEqual(["Produto", "0.2500"]);
-    expect([r.filhos[1].origemMargem, n(r.filhos[1].margemObjetiva)]).toEqual(["Linha", "0.3000"]);
+    expect([r.filhos[0]!.origemMargem, n(r.filhos[0]!.margemObjetiva)]).toEqual(["Produto", "0.2500"]);
+    expect([r.filhos[1]!.origemMargem, n(r.filhos[1]!.margemObjetiva)]).toEqual(["Linha", "0.3000"]);
     expect(r.pai.origemMargem).toBe("Linha");
   });
 
   it("ignora regra fora da vigência", () => {
-    const expirada: MargemRegra = { ...margens[2], vigenciaFim: "2026-06-30" };
+    const expirada: MargemRegra = { ...margens[2]!, vigenciaFim: "2026-06-30" };
     const r = simular(entrada({ margens: [MARGEM_GERAL, expirada] }));
     expect(r.pai.origemMargem).toBe("Geral");
   });
@@ -308,7 +309,7 @@ describe("11. Exceções sem dupla aplicação", () => {
   it("exceção de −5% substitui a régua geral de −10% e a dimensão continua combinada", () => {
     const filho = produto({ id: "f", corId: "branca", valorDimensao: "30" });
     const r = simular(entrada({ excecoes: [excecao], filhos: [filho] }));
-    const f = r.filhos[0];
+    const f = r.filhos[0]!;
     expect(n(f.ajusteCor!.percentual)).toBe("-0.0500");
     expect(f.ajusteCor!.fonte).toBe("excecao");
     expect(n(f.ajusteDimensional!.percentual)).toBe("0.1000");
@@ -321,20 +322,20 @@ describe("11. Exceções sem dupla aplicação", () => {
     const r = simular(
       entrada({ excecoes: [excecao], filhos: [filho], parametros: { ...PARAMS, desempate: "para_cima" } }),
     );
-    expect(n(r.filhos[0].precoFinal)).toBe("10.5000");
+    expect(n(r.filhos[0]!.precoFinal)).toBe("10.5000");
   });
 
   it("exige resolução quando duas regras equivalentes empatam", () => {
     const duplicada = { ...REGUA_COR, id: "rc-geral-2", codigo: "COR-GERAL-2" };
     const r = simular(entrada({ reguas: [REGUA_COR, duplicada, REGUA_DIM], filhos: [produto({ id: "f" })] }));
-    expect(r.filhos[0].status).toBe("bloqueado");
-    expect(r.filhos[0].alertas.map((a) => a.codigo)).toContain("CONFLITO_COR");
+    expect(r.filhos[0]!.status).toBe("bloqueado");
+    expect(r.filhos[0]!.alertas.map((a) => a.codigo)).toContain("CONFLITO_COR");
   });
 
   it("régua substituída deixa de ser aplicada", () => {
     const nova = { ...REGUA_COR, id: "rc-nova", codigo: "COR-NOVA", substituiId: "rc-geral", cores: [{ corId: "branca", percentual: "-0.08" }] };
     const r = simular(entrada({ reguas: [REGUA_COR, nova, REGUA_DIM], filhos: [produto({ id: "f", corId: "branca" })] }));
-    expect(n(r.filhos[0].ajusteCor!.percentual)).toBe("-0.0800");
+    expect(n(r.filhos[0]!.ajusteCor!.percentual)).toBe("-0.0800");
   });
 });
 
@@ -342,7 +343,7 @@ describe("12. Comparação com mercado", () => {
   it("preço R$ 9,90 e mercado R$ 11,00: −R$ 1,10 e −10%", () => {
     const filho = produto({ id: "f", corId: "branca", valorDimensao: "30", mercado: "11" });
     const r = simular(entrada({ filhos: [filho] }));
-    const f = r.filhos[0];
+    const f = r.filhos[0]!;
     expect(n(f.diferencaMercadoReais)).toBe("-1.1000");
     expect(n(f.diferencaMercadoPct)).toBe("-0.1000");
     expect(f.posicaoMercado).toBe("abaixo");
@@ -350,7 +351,7 @@ describe("12. Comparação com mercado", () => {
 
   it("mercado ausente torna a comparação indisponível", () => {
     const r = simular(entrada({ filhos: [produto({ id: "f" })] }));
-    expect(r.filhos[0].posicaoMercado).toBe("indisponivel");
+    expect(r.filhos[0]!.posicaoMercado).toBe("indisponivel");
   });
 });
 
@@ -358,8 +359,8 @@ describe("13. Ausência de correção automática", () => {
   it("filho abaixo da meta mantém o preço calculado pela régua", () => {
     const filho = produto({ id: "f", custo: "9" });
     const r = simular(entrada({ filhos: [filho] }));
-    expect(n(r.filhos[0].precoFinal)).toBe("10.0000");
-    expect(r.filhos[0].status).toBe("abaixo_meta");
+    expect(n(r.filhos[0]!.precoFinal)).toBe("10.0000");
+    expect(r.filhos[0]!.status).toBe("abaixo_meta");
   });
 });
 
@@ -368,7 +369,7 @@ describe("14. Alterações manuais dos filhos", () => {
     const a = produto({ id: "a", mercado: "12" });
     const b = produto({ id: "b" });
     const r = simular(entrada({ filhos: [a, b], precosManuaisFilhos: { a: "12" } }));
-    const [fa, fb] = r.filhos;
+    const [fa, fb] = r.filhos as [ItemResultado, ItemResultado];
     expect(n(fa.precoCalculado)).toBe("10.0000");
     expect(n(fa.precoManual)).toBe("12.0000");
     expect(n(fa.precoFinal)).toBe("12.0000");
@@ -380,6 +381,6 @@ describe("14. Alterações manuais dos filhos", () => {
 
   it("bloqueia preço manual de filho igual ou inferior a zero", () => {
     const r = simular(entrada({ filhos: [produto({ id: "a" })], precosManuaisFilhos: { a: "-1" } }));
-    expect(r.filhos[0].status).toBe("bloqueado");
+    expect(r.filhos[0]!.status).toBe("bloqueado");
   });
 });

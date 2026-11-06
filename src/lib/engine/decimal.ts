@@ -21,7 +21,7 @@ export function decOuNulo(valor: string | null | undefined): Dec | null {
 export function formatarReais(valor: Dec, casas = 2): string {
   const fixo = valor.toFixed(casas);
   const negativo = fixo.startsWith("-");
-  const [inteiro, frac] = (negativo ? fixo.slice(1) : fixo).split(".");
+  const [inteiro = "", frac] = (negativo ? fixo.slice(1) : fixo).split(".");
   const milhar = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return `${negativo ? "−" : ""}R$ ${milhar}${frac ? "," + frac : ""}`;
 }
