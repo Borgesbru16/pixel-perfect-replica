@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Papel } from "@/lib/papeis";
 
@@ -13,7 +15,7 @@ export interface UsuarioLista {
   criadoEm: string;
 }
 
-async function exigirAdmin(sb: { rpc: (fn: "has_role", args: { _user_id: string; _role: Papel }) => PromiseLike<{ data: boolean | null }> }, userId: string) {
+async function exigirAdmin(sb: SupabaseClient<Database>, userId: string) {
   const { data } = await sb.rpc("has_role", { _user_id: userId, _role: "administrador" });
   if (!data) throw new Error("Acesso restrito ao administrador.");
 }
