@@ -29,6 +29,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function mensagemErro(error: { message: string; status?: number | undefined }, padrao: string): string {
+  const m = error.message ?? "";
+  if (/fetch|network|Load failed/i.test(m) || error.status === 0 || (error.status ?? 0) >= 500) {
+    return "Sem conexão com o servidor. Aguarde alguns instantes e tente de novo.";
+  }
+  if (/not confirmed/i.test(m)) {
+    return "Confirme seu cadastro pelo link enviado ao seu e-mail antes de entrar.";
+  }
+  if (/password/i.test(m) && /(least|short|weak)/i.test(m)) {
+    return "A senha precisa ser mais forte (mínimo de 6 caracteres).";
+  }
+  return padrao;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [carregando, setCarregando] = useState(false);
@@ -43,7 +57,7 @@ function AuthPage() {
     });
     setCarregando(false);
     if (error) {
-      toast.error("E-mail ou senha inválidos.");
+      toast.error(mensagemErro(error, "E-mail ou senha inválidos."));
       return;
     }
     navigate({ to: "/dashboard", replace: true });
@@ -63,7 +77,11 @@ function AuthPage() {
     });
     setCarregando(false);
     if (error) {
-      toast.error(error.message.includes("already") ? "Este e-mail já está cadastrado." : "Não foi possível criar a conta.");
+      toast.error(
+        /already/i.test(error.message)
+          ? "Este e-mail já está cadastrado. Use a aba Entrar."
+          : mensagemErro(error, "Não foi possível criar a conta."),
+      );
       return;
     }
     if (data.session) {
