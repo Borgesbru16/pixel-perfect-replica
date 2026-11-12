@@ -1,23 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { supabase } from "@/integrations/supabase/client";
+
+// A sessão fica no navegador: o redirecionamento roda apenas no cliente.
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Simulador de Preços — Início" },
+      { name: "description", content: "Acesse o Simulador de Preços para formar, simular e analisar preços de produtos." },
+      { property: "og:title", content: "Simulador de Preços — Início" },
+      { property: "og:description", content: "Formação, simulação e análise de preços de produtos pai e filho." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    throw redirect({ to: data.session ? "/dashboard" : "/auth", replace: true });
+  },
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
